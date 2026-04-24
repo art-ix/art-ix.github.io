@@ -340,6 +340,150 @@
   .palette-btn[data-p="3"] { background: linear-gradient(90deg, #fff, #888, #222, #000); }
   .palette-btn[data-p="4"] { background: linear-gradient(90deg, #0a0a0a, #2a4d3a, #8fbc5a, #f5f5dc); }
 
+  /* Collapsible section */
+  .collapsible {
+    margin-top: 12px;
+    border-top: 1px solid var(--panel-border);
+  }
+  .collapsible-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 0 8px;
+    background: transparent;
+    border: none;
+    color: var(--ink-dim);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .collapsible-toggle:hover { color: var(--ink); }
+  .collapsible-toggle .chev {
+    font-size: 8px;
+    color: var(--ink-faint);
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .collapsible.open .collapsible-toggle .chev {
+    transform: rotate(180deg);
+    color: var(--accent);
+  }
+  .collapsible-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .collapsible.open .collapsible-body {
+    grid-template-rows: 1fr;
+  }
+  .collapsible-body-inner {
+    overflow: hidden;
+    min-height: 0;
+  }
+  .collapsible-body-inner > :first-child { padding-top: 2px; }
+  .collapsible-body-inner > :last-child { padding-bottom: 4px; }
+
+  /* Action bar — split into primary (big) and utility (icon) rows */
+  .actions {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .actions-primary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+  }
+  .action-btn {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    padding: 10px 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .action-btn:hover {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .action-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+  .action-btn .ico {
+    font-size: 11px;
+    opacity: 0.8;
+  }
+  .actions-utility {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px;
+  }
+  .action-btn.util {
+    padding: 8px 4px;
+    font-size: 9px;
+    color: var(--ink-dim);
+    letter-spacing: 0.12em;
+  }
+  .action-btn.util:hover {
+    color: var(--bg);
+  }
+
+  /* Julia c display — subtle single line, no redundant header */
+  .julia-c-display {
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    background: rgba(125, 211, 192, 0.04);
+    border: 1px solid rgba(125, 211, 192, 0.15);
+    border-radius: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: var(--ink);
+    letter-spacing: 0.05em;
+  }
+  .julia-c-display .c-label {
+    color: var(--accent-alt);
+    font-style: italic;
+    font-family: var(--serif);
+    font-size: 13px;
+    margin-right: 8px;
+  }
+  .julia-c-display .c-val {
+    font-variant-numeric: tabular-nums;
+    flex: 1;
+  }
+  .julia-c-display .c-hint {
+    font-size: 8.5px;
+    color: var(--ink-faint);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  /* Slightly tighter julia presets to fit with c display */
+  .julia-presets {
+    margin-top: 8px;
+    margin-bottom: 12px;
+  }
+
   .prec-mode-btn {
     font-family: var(--mono);
     font-size: 10px;
@@ -415,6 +559,113 @@
   .crosshair::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
   .crosshair::after { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
 
+  /* Mode tabs at top of panel */
+  .mode-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .mode-tab {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    color: var(--ink-dim);
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mode-tab:hover {
+    color: var(--ink);
+    border-color: var(--ink-faint);
+  }
+  .mode-tab.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  /* Julia-specific controls section */
+  .julia-section {
+    margin-top: 2px;
+    padding-bottom: 14px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .julia-section-hdr {
+    font-size: 9.5px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .julia-section-hdr .hint {
+    color: var(--ink-dim);
+    text-transform: none;
+    letter-spacing: 0.05em;
+    font-size: 9.5px;
+  }
+  .julia-presets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .julia-preset-btn {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    color: var(--ink);
+    padding: 7px 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .julia-preset-btn:hover {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  /* Brief toast for feedback (e.g. "Julia c picked") */
+  .toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    padding: 14px 22px;
+    background: var(--panel);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border: 1px solid var(--accent);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    z-index: 30;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .toast.visible {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .toast .tlabel { color: var(--accent); margin-right: 10px; }
+
   /* Tablet */
   @media (max-width: 860px) {
     .panel { min-width: 260px; padding: 16px 18px 14px; }
@@ -464,6 +715,15 @@
       padding: 6px 0;
     }
     .ctrl label { font-size: 9.5px; letter-spacing: 0.1em; }
+
+    /* Hide the right-click hint on touch devices */
+    #juliaHintDesktop { display: none; }
+
+    /* Julia preset buttons — 2 cols on narrow screens */
+    .julia-presets { grid-template-columns: 1fr 1fr; }
+
+    /* Actions — 2x2 grid on phones for primary */
+    .actions-primary { grid-template-columns: 1fr 1fr; }
   }
 
   /* Very narrow phones */
@@ -490,11 +750,12 @@
 
 <canvas id="canvas"></canvas>
 <div class="crosshair" id="crosshair"></div>
+<div class="toast" id="toast"><span class="tlabel" id="toastLabel">✓</span><span id="toastText">Done</span></div>
 
 <div class="topbar">
   <div class="brand">
     <div class="brand-title">mandelbrot<span class="dot">.</span></div>
-    <div class="brand-sub">z → z² + c · perturbation theory</div>
+    <div class="brand-sub" id="brandSub">z → z² + c · perturbation theory</div>
   </div>
   <div class="hud-right" id="hud">
     <div><span class="key">Re</span> &nbsp; <span class="val" id="re">—</span></div>
@@ -514,20 +775,31 @@
     </span>
   </div>
 
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="mandelbrot">Mandelbrot</button>
+    <button class="mode-tab" data-mode="julia">Julia</button>
+  </div>
+
+  <div class="julia-section" id="juliaSection" style="display:none">
+    <div class="julia-c-display">
+      <span class="c-label">c</span>
+      <span class="c-val" id="juliaCVal">—</span>
+      <span class="c-hint" id="juliaHintDesktop">right-click to pick</span>
+    </div>
+    <div class="julia-presets">
+      <button class="julia-preset-btn" data-cx="-0.7269" data-cy="0.1889">Dendrite</button>
+      <button class="julia-preset-btn" data-cx="-0.8" data-cy="0.156">Spiral</button>
+      <button class="julia-preset-btn" data-cx="0.285" data-cy="0.01">Rabbit</button>
+      <button class="julia-preset-btn" data-cx="-0.4" data-cy="0.6">San Marco</button>
+      <button class="julia-preset-btn" data-cx="0.355534" data-cy="0.337292">Airplane</button>
+      <button class="julia-preset-btn" data-cx="-0.75" data-cy="0.11">Basilica</button>
+    </div>
+  </div>
+
   <div class="ctrl">
     <label>Iterations</label>
     <input type="range" id="iter" min="50" max="2000" value="400" step="10">
     <span class="readout" id="iterVal">400</span>
-  </div>
-  <div class="ctrl">
-    <label>Color shift</label>
-    <input type="range" id="shift" min="0" max="100" value="0" step="1">
-    <span class="readout" id="shiftVal">0.00</span>
-  </div>
-  <div class="ctrl">
-    <label>Contrast</label>
-    <input type="range" id="contrast" min="5" max="100" value="30" step="1">
-    <span class="readout" id="contrastVal">0.30</span>
   </div>
 
   <div class="palettes">
@@ -538,26 +810,52 @@
     <div class="palette-btn" data-p="4" title="Forest"></div>
   </div>
 
-  <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--panel-border)">
-    <div style="display:flex; justify-content:space-between; align-items:center; font-size:9.5px; letter-spacing:0.25em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:8px">
-      <span>Precision</span>
-      <span style="color:var(--ink-dim); text-transform:none; letter-spacing:0.05em" id="precHint">auto-switch near limit</span>
-    </div>
-    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:4px">
-      <button class="prec-mode-btn active" data-mode="auto">Auto</button>
-      <button class="prec-mode-btn" data-mode="f32">F32</button>
-      <button class="prec-mode-btn" data-mode="dd">HP</button>
-      <button class="prec-mode-btn" data-mode="split" title="Left half F32, right half perturbation">Split</button>
+  <div class="collapsible" id="advancedSection">
+    <button class="collapsible-toggle" id="advancedToggle" aria-expanded="false">
+      <span>Advanced</span>
+      <span class="chev">▼</span>
+    </button>
+    <div class="collapsible-body">
+      <div class="collapsible-body-inner">
+        <div class="ctrl">
+          <label>Color shift</label>
+          <input type="range" id="shift" min="0" max="100" value="0" step="1">
+          <span class="readout" id="shiftVal">0.00</span>
+        </div>
+        <div class="ctrl">
+          <label>Contrast</label>
+          <input type="range" id="contrast" min="5" max="100" value="30" step="1">
+          <span class="readout" id="contrastVal">0.30</span>
+        </div>
+
+        <div style="margin-top:12px">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:9.5px; letter-spacing:0.22em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:6px">
+            <span>Precision</span>
+            <span style="color:var(--ink-dim); text-transform:none; letter-spacing:0.05em" id="precHint">auto-switch near limit</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:4px">
+            <button class="prec-mode-btn active" data-mode="auto">Auto</button>
+            <button class="prec-mode-btn" data-mode="f32">F32</button>
+            <button class="prec-mode-btn" data-mode="dd">HP</button>
+            <button class="prec-mode-btn" data-mode="split" title="Left half F32, right half perturbation">Split</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="buttons">
-    <button id="animBtn">▶ Animate</button>
-    <button id="cycleBtn">Color cycle</button>
-    <button id="diveBtn">Dive</button>
-    <button id="resetBtn">Reset</button>
-    <button id="saveBtn">⬇ Save PNG</button>
-    <button id="copyLinkBtn">🔗 Share</button>
+  <div class="actions">
+    <div class="actions-primary">
+      <button class="action-btn" id="animBtn"><span class="ico">▶</span>Animate</button>
+      <button class="action-btn" id="cycleBtn"><span class="ico">◌</span>Cycle</button>
+      <button class="action-btn" id="diveBtn"><span class="ico">↓</span>Dive</button>
+      <button class="action-btn" id="resetBtn"><span class="ico">↺</span>Reset</button>
+    </div>
+    <div class="actions-utility">
+      <button class="action-btn util" id="saveBtn"><span class="ico">⬇</span>Save PNG</button>
+      <button class="action-btn util" id="copyLinkBtn"><span class="ico">⎘</span>Share link</button>
+      <button class="action-btn util" id="fullscreenBtn"><span class="ico">⤢</span>Fullscreen</button>
+    </div>
   </div>
 </div>
 
@@ -780,6 +1078,115 @@
   const progPT  = link(VS, FS_PT);
 
   // ────────────────────────────────────────────────────────────────
+  //  Julia shader — F32 (shallow)
+  //  Same z → z² + c recurrence, but c is a global parameter and
+  //  z starts from the pixel's position.
+  // ────────────────────────────────────────────────────────────────
+  const FS_JULIA_F32 = `
+    precision highp float;
+    uniform vec2  u_resolution;
+    uniform vec2  u_center;
+    uniform float u_scale;
+    uniform float u_maxIter;
+    uniform vec2  u_juliaC;
+    uniform float u_shift;
+    uniform float u_contrast;
+    uniform int   u_palette;
+
+    ${SHARED_GLSL}
+
+    void main() {
+      vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
+      vec2 z = u_center + uv * 2.0 * u_scale;
+      vec2 c = u_juliaC;
+
+      float iter = 0.0;
+      bool escaped = false;
+      for (int i = 0; i < 2000; i++) {
+        if (float(i) >= u_maxIter) break;
+        z = vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y) + c;
+        if (dot(z,z) > 256.0) { iter = float(i); escaped = true; break; }
+      }
+      if (!escaped) { gl_FragColor = vec4(applyPalette(0.0, u_palette), 1.0); return; }
+      gl_FragColor = vec4(colorFromIter(iter, dot(z,z), u_shift, u_contrast, u_palette), 1.0);
+    }
+  `;
+
+  // ────────────────────────────────────────────────────────────────
+  //  Julia shader — perturbation (deep zoom)
+  //  Since c is constant here, the iteration is:
+  //      z_{n+1} = z_n² + c
+  //  Reference orbit starts from a chosen reference z_0, not from 0.
+  //  Per-pixel delta: δz_{n+1} = 2·z_ref_n·δz_n + δz_n²    (no δc term!)
+  //  Initial δz = pixel_z - reference_z.
+  // ────────────────────────────────────────────────────────────────
+  const FS_JULIA_PT = `
+    precision highp float;
+    uniform vec2  u_resolution;
+    uniform float u_scale;
+    uniform vec2  u_viewOffset;   // (view_center - reference_z_point)
+    uniform float u_maxIter;
+    uniform float u_refLength;
+    uniform sampler2D u_refOrbit;
+    uniform float u_shift;
+    uniform float u_contrast;
+    uniform int   u_palette;
+
+    ${SHARED_GLSL}
+
+    void main() {
+      vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
+      // Initial δz = pixel_z - reference_z_point
+      vec2 dz = u_viewOffset + uv * 2.0 * u_scale;
+
+      float iter = 0.0;
+      bool escaped = false;
+      float magSq = 0.0;
+      float invLen = 1.0 / u_refLength;
+      float refIdx = 0.0;
+
+      for (int i = 0; i < 2000; i++) {
+        if (float(i) >= u_maxIter) break;
+
+        vec4 ref = texture2D(u_refOrbit, vec2((refIdx + 0.5) * invLen, 0.5));
+        vec2 z_ref = vec2(ref.r, ref.b);
+
+        // δz_new = 2·z_ref·δz + δz²    (c cancels out in Julia perturbation)
+        vec2 refDz = vec2(
+          z_ref.x * dz.x - z_ref.y * dz.y,
+          z_ref.x * dz.y + z_ref.y * dz.x
+        );
+        vec2 dzSq = vec2(dz.x * dz.x - dz.y * dz.y, 2.0 * dz.x * dz.y);
+        dz = 2.0 * refDz + dzSq;
+        refIdx += 1.0;
+
+        vec4 refNext = texture2D(u_refOrbit, vec2((refIdx + 0.5) * invLen, 0.5));
+        vec2 z_ref_next = vec2(refNext.r, refNext.b);
+        vec2 zFull = z_ref_next + dz;
+        float zFullSq = dot(zFull, zFull);
+
+        if (zFullSq > 256.0) { iter = float(i); magSq = zFullSq; escaped = true; break; }
+
+        // Glitch detection & rebase (same as Mandelbrot)
+        float refSq = dot(z_ref_next, z_ref_next);
+        if (zFullSq < refSq * 1e-3) {
+          dz = zFull;
+          refIdx = 0.0;
+        } else if (refIdx >= u_refLength - 1.0) {
+          dz = zFull;
+          refIdx = 0.0;
+        }
+      }
+
+      if (!escaped) { gl_FragColor = vec4(applyPalette(0.0, u_palette), 1.0); return; }
+      gl_FragColor = vec4(colorFromIter(iter, magSq, u_shift, u_contrast, u_palette), 1.0);
+    }
+  `;
+
+  const progJuliaF32 = link(VS, FS_JULIA_F32);
+  const progJuliaPT  = link(VS, FS_JULIA_PT);
+
+  // ────────────────────────────────────────────────────────────────
   //  Split-view shader — F32 on left, perturbation on right, with
   //  a visible dividing line. Definitive visual diagnostic.
   // ────────────────────────────────────────────────────────────────
@@ -912,6 +1319,30 @@
     uPalette: gl.getUniformLocation(progPT, 'u_palette'),
   };
 
+  const locJuliaF32 = {
+    aPos: gl.getAttribLocation(progJuliaF32, 'a_pos'),
+    uRes: gl.getUniformLocation(progJuliaF32, 'u_resolution'),
+    uCenter: gl.getUniformLocation(progJuliaF32, 'u_center'),
+    uScale: gl.getUniformLocation(progJuliaF32, 'u_scale'),
+    uMaxIter: gl.getUniformLocation(progJuliaF32, 'u_maxIter'),
+    uJuliaC: gl.getUniformLocation(progJuliaF32, 'u_juliaC'),
+    uShift: gl.getUniformLocation(progJuliaF32, 'u_shift'),
+    uContrast: gl.getUniformLocation(progJuliaF32, 'u_contrast'),
+    uPalette: gl.getUniformLocation(progJuliaF32, 'u_palette'),
+  };
+  const locJuliaPT = {
+    aPos: gl.getAttribLocation(progJuliaPT, 'a_pos'),
+    uRes: gl.getUniformLocation(progJuliaPT, 'u_resolution'),
+    uScale: gl.getUniformLocation(progJuliaPT, 'u_scale'),
+    uViewOffset: gl.getUniformLocation(progJuliaPT, 'u_viewOffset'),
+    uMaxIter: gl.getUniformLocation(progJuliaPT, 'u_maxIter'),
+    uRefLength: gl.getUniformLocation(progJuliaPT, 'u_refLength'),
+    uRefOrbit: gl.getUniformLocation(progJuliaPT, 'u_refOrbit'),
+    uShift: gl.getUniformLocation(progJuliaPT, 'u_shift'),
+    uContrast: gl.getUniformLocation(progJuliaPT, 'u_contrast'),
+    uPalette: gl.getUniformLocation(progJuliaPT, 'u_palette'),
+  };
+
   // Enable float textures so we can store reference orbit at high precision.
   const floatExt = gl.getExtension('OES_texture_float');
   if (!floatExt) {
@@ -926,30 +1357,31 @@
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-  // Compute how many iterations a point's orbit survives before escaping.
-  // Used to pick a good reference — longer-surviving points give better
-  // perturbation approximations for surrounding pixels.
-  function orbitLongevity(cx, cy, maxIter) {
-    let zx = 0, zy = 0;
+  // orbitLongevity — how many iterations before escape. Mode-aware:
+  //   mandelbrot: start z=0, per-point c=(cx,cy)
+  //   julia:      start z=(cx,cy), fixed c=(jcx,jcy)
+  function orbitLongevity(cx, cy, maxIter, mode, jcx, jcy) {
+    let zx, zy, cxUsed, cyUsed;
+    if (mode === 'julia') {
+      zx = cx; zy = cy; cxUsed = jcx; cyUsed = jcy;
+    } else {
+      zx = 0;  zy = 0;  cxUsed = cx;  cyUsed = cy;
+    }
     for (let i = 0; i < maxIter; i++) {
       const zxSq = zx * zx, zySq = zy * zy;
       if (zxSq + zySq > 1e12) return i;
-      const zxNew = zxSq - zySq + cx;
-      zy = 2 * zx * zy + cy;
+      const zxNew = zxSq - zySq + cxUsed;
+      zy = 2 * zx * zy + cyUsed;
       zx = zxNew;
     }
     return maxIter;
   }
 
-  // Pick a reference point: start with view center, but if it escapes early,
-  // sample a handful of nearby points and take whichever survives longest.
-  function pickReferencePoint(viewCx, viewCy, scale, maxIter) {
+  function pickReferencePoint(viewCx, viewCy, scale, maxIter, mode, jcx, jcy) {
     let bestCx = viewCx, bestCy = viewCy;
-    let bestLife = orbitLongevity(viewCx, viewCy, maxIter);
-    // If the center already survives most iterations, done.
+    let bestLife = orbitLongevity(viewCx, viewCy, maxIter, mode, jcx, jcy);
     if (bestLife > maxIter * 0.9) return [bestCx, bestCy];
 
-    // Otherwise probe a small grid around the center within ~half the view.
     const r = scale * 0.5;
     const offsets = [
       [ r,  0], [-r,  0], [ 0,  r], [ 0, -r],
@@ -958,7 +1390,7 @@
     ];
     for (const [dx, dy] of offsets) {
       const cx = viewCx + dx, cy = viewCy + dy;
-      const life = orbitLongevity(cx, cy, maxIter);
+      const life = orbitLongevity(cx, cy, maxIter, mode, jcx, jcy);
       if (life > bestLife) {
         bestLife = life;
         bestCx = cx; bestCy = cy;
@@ -969,39 +1401,42 @@
 
   let orbitBuffer = new Float32Array(4);
   let orbitLength = 1;
-  // The reference is "pinned" — we don't recompute it every pan/zoom.
-  // We only recompute when:
-  //   (a) maxIter increased (need more orbit samples), or
-  //   (b) the view has moved too far from the reference point, or
-  //   (c) iterations setting changed significantly.
   const refState = {
-    cx: NaN, cy: NaN,      // reference point in full JS-double precision
+    cx: NaN, cy: NaN,
     maxIter: 0,
+    mode: '',
+    jcx: NaN, jcy: NaN,
     valid: false,
   };
 
-  // Decide if we need a fresh reference orbit for this (view_cx, view_cy, scale, maxIter).
-  // If so, pick the view center as the new reference and compute.
-  function ensureReferenceOrbit(viewCx, viewCy, scale, maxIter) {
-    // How far is the view from the current reference, in units of "view scale"?
+  // Compute (or reuse) reference orbit. Mode-aware:
+  //   mandelbrot: z starts at 0, c varies per pixel
+  //   julia:      z starts at ref point, c is constant (juliaC)
+  function ensureReferenceOrbit(viewCx, viewCy, scale, maxIter, mode, jcx, jcy) {
     const dx = viewCx - refState.cx;
     const dy = viewCy - refState.cy;
     const dist = Math.hypot(dx, dy);
-    // If the reference point is further from the view center than ~one screen-width
-    // (scale is half-height; view width ~ 2*scale*aspect ~ 3*scale), re-reference.
-    // Also re-reference when iteration count grew.
     const tooFar = dist > scale * 1.0;
     const needMoreIter = maxIter > refState.maxIter;
-    if (refState.valid && !tooFar && !needMoreIter) return;
+    // Also re-reference when switching mode or when Julia c changes
+    const modeChanged = refState.mode !== mode;
+    const juliaCChanged = mode === 'julia' && (refState.jcx !== jcx || refState.jcy !== jcy);
+    if (refState.valid && !tooFar && !needMoreIter && !modeChanged && !juliaCChanged) return;
 
-    // Pick a reference point that has a long-surviving orbit — better
-    // aproximation for surrounding pixels than a near-edge point.
-    const [cx, cy] = pickReferencePoint(viewCx, viewCy, scale, maxIter);
+    const [refCx, refCy] = pickReferencePoint(viewCx, viewCy, scale, maxIter, mode, jcx, jcy);
     if (orbitBuffer.length < maxIter * 4) {
       orbitBuffer = new Float32Array(maxIter * 4);
     }
     const buf = orbitBuffer;
-    let zx = 0, zy = 0;
+
+    // Mode-aware initial conditions
+    let zx, zy, iterCx, iterCy;
+    if (mode === 'julia') {
+      zx = refCx; zy = refCy; iterCx = jcx; iterCy = jcy;
+    } else {
+      zx = 0; zy = 0; iterCx = refCx; iterCy = refCy;
+    }
+
     for (let i = 0; i < maxIter; i++) {
       buf[i * 4]     = zx;
       buf[i * 4 + 1] = 0;
@@ -1009,15 +1444,14 @@
       buf[i * 4 + 3] = 0;
       const zxSq = zx * zx, zySq = zy * zy;
       if (zxSq + zySq > 1e12) {
-        // Reference escaped → fill remainder with last value
         for (let j = i + 1; j < maxIter; j++) {
           buf[j * 4] = zx;
           buf[j * 4 + 2] = zy;
         }
         break;
       }
-      const zxNew = zxSq - zySq + cx;
-      const zyNew = 2 * zx * zy + cy;
+      const zxNew = zxSq - zySq + iterCx;
+      const zyNew = 2 * zx * zy + iterCy;
       zx = zxNew;
       zy = zyNew;
     }
@@ -1026,13 +1460,15 @@
     gl.bindTexture(gl.TEXTURE_2D, orbitTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, maxIter, 1, 0, gl.RGBA, gl.FLOAT,
                   orbitBuffer.subarray(0, maxIter * 4));
-    refState.cx = cx;
-    refState.cy = cy;
+    refState.cx = refCx;
+    refState.cy = refCy;
     refState.maxIter = maxIter;
+    refState.mode = mode;
+    refState.jcx = jcx;
+    refState.jcy = jcy;
     refState.valid = true;
   }
 
-  // Invalidate the reference when the user hits Reset or we otherwise jump.
   function invalidateReference() {
     refState.valid = false;
     refState.cx = NaN;
@@ -1062,6 +1498,11 @@
     interacting: false,
     idleFrames: 0,
     usingDD: false,
+    // Mode: 'mandelbrot' or 'julia'
+    mode: 'mandelbrot',
+    // Julia parameter c — used only when mode === 'julia'
+    juliaCx: -0.7269,
+    juliaCy:  0.1889,
   };
 
   // f32 starts showing pixelation around scale ~3e-5; switch to perturbation earlier.
@@ -1132,63 +1573,92 @@
 
     // Make sure reference orbit is up-to-date if we'll need it
     if (useSplit || useDD) {
-      ensureReferenceOrbit(state.cx, state.cy, state.scale, state.maxIter);
+      ensureReferenceOrbit(state.cx, state.cy, state.scale, state.maxIter,
+                           state.mode, state.juliaCx, state.juliaCy);
     }
 
-    // viewOffset = (view_center - reference_point), computed as JS doubles,
-    // then truncated to f32. At deep zoom the difference is tiny so the
-    // truncation loses no meaningful precision.
+    // viewOffset = (view_center - reference_point)
     const voX = state.cx - refState.cx;
     const voY = state.cy - refState.cy;
 
+    const isJulia = state.mode === 'julia';
+
     if (useSplit) {
-      gl.useProgram(progSplit);
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      gl.enableVertexAttribArray(locSplit.aPos);
-      gl.vertexAttribPointer(locSplit.aPos, 2, gl.FLOAT, false, 0, 0);
+      // Split view currently only for Mandelbrot — Julia falls through to plain render
+      if (isJulia) {
+        // Fall back to HP for Julia split — visually still informative
+        gl.useProgram(progJuliaPT);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.enableVertexAttribArray(locJuliaPT.aPos);
+        gl.vertexAttribPointer(locJuliaPT.aPos, 2, gl.FLOAT, false, 0, 0);
+        gl.uniform2f(locJuliaPT.uRes, canvas.width, canvas.height);
+        gl.uniform1f(locJuliaPT.uScale, state.scale);
+        gl.uniform2f(locJuliaPT.uViewOffset, voX, voY);
+        gl.uniform1f(locJuliaPT.uMaxIter, state.maxIter);
+        gl.uniform1f(locJuliaPT.uRefLength, orbitLength);
+        gl.uniform1f(locJuliaPT.uShift, state.shift);
+        gl.uniform1f(locJuliaPT.uContrast, state.contrast);
+        gl.uniform1i(locJuliaPT.uPalette, state.palette);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, orbitTex);
+        gl.uniform1i(locJuliaPT.uRefOrbit, 0);
+      } else {
+        gl.useProgram(progSplit);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.enableVertexAttribArray(locSplit.aPos);
+        gl.vertexAttribPointer(locSplit.aPos, 2, gl.FLOAT, false, 0, 0);
 
-      gl.uniform2f(locSplit.uRes, canvas.width, canvas.height);
-      gl.uniform2f(locSplit.uCenter, state.cx, state.cy);
-      gl.uniform1f(locSplit.uScale, state.scale);
-      gl.uniform2f(locSplit.uViewOffset, voX, voY);
-      gl.uniform1f(locSplit.uMaxIter, state.maxIter);
-      gl.uniform1f(locSplit.uRefLength, orbitLength);
-      gl.uniform1f(locSplit.uShift, state.shift);
-      gl.uniform1f(locSplit.uContrast, state.contrast);
-      gl.uniform1i(locSplit.uPalette, state.palette);
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, orbitTex);
-      gl.uniform1i(locSplit.uRefOrbit, 0);
+        gl.uniform2f(locSplit.uRes, canvas.width, canvas.height);
+        gl.uniform2f(locSplit.uCenter, state.cx, state.cy);
+        gl.uniform1f(locSplit.uScale, state.scale);
+        gl.uniform2f(locSplit.uViewOffset, voX, voY);
+        gl.uniform1f(locSplit.uMaxIter, state.maxIter);
+        gl.uniform1f(locSplit.uRefLength, orbitLength);
+        gl.uniform1f(locSplit.uShift, state.shift);
+        gl.uniform1f(locSplit.uContrast, state.contrast);
+        gl.uniform1i(locSplit.uPalette, state.palette);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, orbitTex);
+        gl.uniform1i(locSplit.uRefOrbit, 0);
+      }
     } else if (useDD) {
-      gl.useProgram(progPT);
+      const prog = isJulia ? progJuliaPT : progPT;
+      const loc  = isJulia ? locJuliaPT  : locPT;
+      gl.useProgram(prog);
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      gl.enableVertexAttribArray(locPT.aPos);
-      gl.vertexAttribPointer(locPT.aPos, 2, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(loc.aPos);
+      gl.vertexAttribPointer(loc.aPos, 2, gl.FLOAT, false, 0, 0);
 
-      gl.uniform2f(locPT.uRes, canvas.width, canvas.height);
-      gl.uniform1f(locPT.uScale, state.scale);
-      gl.uniform2f(locPT.uViewOffset, voX, voY);
-      gl.uniform1f(locPT.uMaxIter, state.maxIter);
-      gl.uniform1f(locPT.uRefLength, orbitLength);
-      gl.uniform1f(locPT.uShift, state.shift);
-      gl.uniform1f(locPT.uContrast, state.contrast);
-      gl.uniform1i(locPT.uPalette, state.palette);
+      gl.uniform2f(loc.uRes, canvas.width, canvas.height);
+      gl.uniform1f(loc.uScale, state.scale);
+      gl.uniform2f(loc.uViewOffset, voX, voY);
+      gl.uniform1f(loc.uMaxIter, state.maxIter);
+      gl.uniform1f(loc.uRefLength, orbitLength);
+      gl.uniform1f(loc.uShift, state.shift);
+      gl.uniform1f(loc.uContrast, state.contrast);
+      gl.uniform1i(loc.uPalette, state.palette);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, orbitTex);
-      gl.uniform1i(locPT.uRefOrbit, 0);
+      gl.uniform1i(loc.uRefOrbit, 0);
     } else {
-      gl.useProgram(progF32);
+      // Shallow F32 path
+      const prog = isJulia ? progJuliaF32 : progF32;
+      const loc  = isJulia ? locJuliaF32  : locF32;
+      gl.useProgram(prog);
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      gl.enableVertexAttribArray(locF32.aPos);
-      gl.vertexAttribPointer(locF32.aPos, 2, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(loc.aPos);
+      gl.vertexAttribPointer(loc.aPos, 2, gl.FLOAT, false, 0, 0);
 
-      gl.uniform2f(locF32.uRes, canvas.width, canvas.height);
-      gl.uniform2f(locF32.uCenter, state.cx, state.cy);
-      gl.uniform1f(locF32.uScale, state.scale);
-      gl.uniform1f(locF32.uMaxIter, state.maxIter);
-      gl.uniform1f(locF32.uShift, state.shift);
-      gl.uniform1f(locF32.uContrast, state.contrast);
-      gl.uniform1i(locF32.uPalette, state.palette);
+      gl.uniform2f(loc.uRes, canvas.width, canvas.height);
+      gl.uniform2f(loc.uCenter, state.cx, state.cy);
+      gl.uniform1f(loc.uScale, state.scale);
+      gl.uniform1f(loc.uMaxIter, state.maxIter);
+      gl.uniform1f(loc.uShift, state.shift);
+      gl.uniform1f(loc.uContrast, state.contrast);
+      gl.uniform1i(loc.uPalette, state.palette);
+      if (isJulia) {
+        gl.uniform2f(loc.uJuliaC, state.juliaCx, state.juliaCy);
+      }
     }
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -1206,6 +1676,11 @@
     imEl.textContent = (state.cy >= 0 ? '+' : '') + formatCoord(state.cy) + 'i';
     const z = 1.4 / state.scale;
     zoomEl.textContent = z < 1e4 ? z.toFixed(2) + '×' : z.toExponential(2) + '×';
+    // Keep Julia c readout in sync (cheap; always update)
+    if (state.mode === 'julia') {
+      const juliaLbl = document.getElementById('juliaCVal');
+      if (juliaLbl) juliaLbl.textContent = formatShortComplex(state.juliaCx, state.juliaCy);
+    }
   }
 
   let animStart = 0, animBaseScale = 0.005, animCenter = {x:0, y:0};
@@ -1442,11 +1917,11 @@
     state.animating = !state.animating;
     if (state.animating) {
       animBtn.classList.add('active');
-      animBtn.textContent = '■ Stop';
+      animBtn.innerHTML = '<span class="ico">■</span>Stop';
       startOrbitAnim();
     } else {
       animBtn.classList.remove('active');
-      animBtn.textContent = '▶ Animate';
+      animBtn.innerHTML = '<span class="ico">▶</span>Animate';
     }
   });
 
@@ -1459,14 +1934,14 @@
     if (state.diving) {
       state.diving = false;
       diveBtn.classList.remove('active');
-      diveBtn.textContent = 'Dive';
+      diveBtn.innerHTML = '<span class="ico">↓</span>Dive';
       crosshair.classList.remove('visible');
     } else {
       const target = divePoints[Math.floor(Math.random() * divePoints.length)];
       state.diveTarget = target;
       state.diving = true;
       diveBtn.classList.add('active');
-      diveBtn.textContent = '■ Stop dive';
+      diveBtn.innerHTML = '<span class="ico">■</span>Stop';
       crosshair.classList.add('visible');
     }
   });
@@ -1489,12 +1964,12 @@
     if (state.animating) {
       state.animating = false;
       animBtn.classList.remove('active');
-      animBtn.textContent = '▶ Animate';
+      animBtn.innerHTML = '<span class="ico">▶</span>Animate';
     }
     if (state.diving) {
       state.diving = false;
       diveBtn.classList.remove('active');
-      diveBtn.textContent = 'Dive';
+      diveBtn.innerHTML = '<span class="ico">↓</span>Dive';
       crosshair.classList.remove('visible');
     }
   }
@@ -1532,7 +2007,6 @@
 
   function encodeState() {
     const p = new URLSearchParams();
-    // Number.toString() on a JS double preserves full precision — exactly what we want
     p.set('cx', state.cx);
     p.set('cy', state.cy);
     p.set('z', state.scale);
@@ -1540,6 +2014,11 @@
     if (state.maxIter !== 400) p.set('i', state.maxIter);
     if (state.shift !== 0) p.set('s', state.shift.toFixed(3));
     if (Math.abs(state.contrast - 0.3) > 1e-6) p.set('c', state.contrast.toFixed(3));
+    if (state.mode === 'julia') {
+      p.set('m', 'j');
+      p.set('jx', state.juliaCx);
+      p.set('jy', state.juliaCy);
+    }
     return p.toString();
   }
 
@@ -1548,6 +2027,13 @@
     try {
       const p = new URLSearchParams(location.hash.slice(1));
       let dirty = false;
+      // Mode must be handled first (affects default cx/cy for view)
+      if (p.has('m') && p.get('m') === 'j') {
+        state.mode = 'julia';
+        dirty = true;
+      }
+      if (p.has('jx')) { state.juliaCx = parseFloat(p.get('jx')); dirty = true; }
+      if (p.has('jy')) { state.juliaCy = parseFloat(p.get('jy')); dirty = true; }
       if (p.has('cx')) { state.cx = parseFloat(p.get('cx')); dirty = true; }
       if (p.has('cy')) { state.cy = parseFloat(p.get('cy')); dirty = true; }
       if (p.has('z'))  { state.scale = parseFloat(p.get('z')); dirty = true; }
@@ -1557,6 +2043,10 @@
       if (p.has('c'))  { state.contrast = parseFloat(p.get('c')); dirty = true; }
       if (dirty) {
         syncControlsToState();
+        if (state.mode === 'julia') {
+          document.querySelectorAll('.mode-tab').forEach(t =>
+            t.classList.toggle('active', t.dataset.mode === 'julia'));
+        }
         invalidateReference();
         state.needsRender = true;
       }
@@ -1602,10 +2092,10 @@
     state.interacting = wasInteracting;
 
     // Brief feedback
-    const orig = saveBtn.textContent;
-    saveBtn.textContent = '✓ Saved';
+    const orig = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<span class="ico">✓</span>Saved';
     saveBtn.classList.add('active');
-    setTimeout(() => { saveBtn.textContent = orig; saveBtn.classList.remove('active'); }, 1400);
+    setTimeout(() => { saveBtn.innerHTML = orig; saveBtn.classList.remove('active'); }, 1400);
   });
 
   // ────────────────────────────────────────────────────────────────
@@ -1617,18 +2107,18 @@
     clearTimeout(urlUpdateTimer);
     try { history.replaceState(null, '', '#' + encodeState()); } catch (e) {}
 
-    const orig = copyLinkBtn.textContent;
+    const orig = copyLinkBtn.innerHTML;
     try {
       await navigator.clipboard.writeText(location.href);
-      copyLinkBtn.textContent = '✓ Copied';
+      copyLinkBtn.innerHTML = '<span class="ico">✓</span>Copied';
       copyLinkBtn.classList.add('active');
     } catch (e) {
       // Clipboard API can fail on non-https or in some iframes — fall back to prompt
       window.prompt('Copy this link:', location.href);
-      copyLinkBtn.textContent = '↗ URL shown';
+      copyLinkBtn.innerHTML = '<span class="ico">↗</span>URL shown';
     }
     setTimeout(() => {
-      copyLinkBtn.textContent = orig;
+      copyLinkBtn.innerHTML = orig;
       copyLinkBtn.classList.remove('active');
     }, 1600);
   });
@@ -1684,8 +2174,150 @@
     }
   });
 
+  // ────────────────────────────────────────────────────────────────
+  //  Mode switching — Mandelbrot ⇄ Julia
+  // ────────────────────────────────────────────────────────────────
+  const brandSub = document.getElementById('brandSub');
+  const juliaSection = document.getElementById('juliaSection');
+  const juliaCVal = document.getElementById('juliaCVal');
+  const modeTabs = document.querySelectorAll('.mode-tab');
+
+  function formatShortComplex(x, y) {
+    const fmt = v => {
+      const a = Math.abs(v);
+      if (a < 1e-4 && a > 0) return v.toExponential(2);
+      return v.toFixed(4);
+    };
+    return fmt(x) + (y >= 0 ? '+' : '') + fmt(y) + 'i';
+  }
+
+  function updateBrandAndJuliaLabel() {
+    if (state.mode === 'julia') {
+      brandSub.textContent = 'z → z² + c · julia set';
+      juliaSection.style.display = '';
+      juliaCVal.textContent = formatShortComplex(state.juliaCx, state.juliaCy);
+    } else {
+      brandSub.textContent = 'z → z² + c · perturbation theory';
+      juliaSection.style.display = 'none';
+    }
+  }
+
+  // Saved Mandelbrot view — restored when switching back from Julia.
+  // This way exploring Julia doesn't destroy your Mandelbrot zoom.
+  let savedMandelView = null;
+
+  function setMode(newMode, opts = {}) {
+    if (newMode === state.mode && !opts.force) return;
+    if (newMode === 'julia') {
+      // Save Mandelbrot view
+      savedMandelView = {
+        cx: state.cx, cy: state.cy, scale: state.scale,
+        maxIter: state.maxIter,
+      };
+      state.mode = 'julia';
+      // Frame the Julia set at origin — that's where classic Julia lives
+      state.cx = 0; state.cy = 0;
+      state.scale = 1.6;
+      state.maxIter = Math.max(300, state.maxIter);
+    } else {
+      state.mode = 'mandelbrot';
+      if (savedMandelView) {
+        state.cx = savedMandelView.cx;
+        state.cy = savedMandelView.cy;
+        state.scale = savedMandelView.scale;
+        state.maxIter = savedMandelView.maxIter;
+      } else {
+        state.cx = -0.5; state.cy = 0; state.scale = 1.4;
+      }
+    }
+    modeTabs.forEach(t => t.classList.toggle('active', t.dataset.mode === state.mode));
+    syncControlsToState();
+    invalidateReference();
+    updateBrandAndJuliaLabel();
+    stopAllAnimations();
+    state.needsRender = true;
+  }
+
+  modeTabs.forEach(tab => {
+    tab.addEventListener('click', () => setMode(tab.dataset.mode));
+  });
+
+  // Julia presets
+  document.querySelectorAll('.julia-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.juliaCx = parseFloat(btn.dataset.cx);
+      state.juliaCy = parseFloat(btn.dataset.cy);
+      if (state.mode !== 'julia') setMode('julia');
+      else {
+        invalidateReference();
+        updateBrandAndJuliaLabel();
+        state.needsRender = true;
+      }
+      showToast('Julia c', btn.textContent);
+    });
+  });
+
+  // ────────────────────────────────────────────────────────────────
+  //  Right-click on Mandelbrot → open Julia with c = clicked point
+  //  This is the "killer feature" for exploration.
+  // ────────────────────────────────────────────────────────────────
+  canvas.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    if (state.mode !== 'mandelbrot') return;
+    const p = screenToComplex(e.clientX, e.clientY);
+    state.juliaCx = p.x;
+    state.juliaCy = p.y;
+    setMode('julia');
+    showToast('Julia c', formatShortComplex(p.x, p.y));
+  });
+
+  // ────────────────────────────────────────────────────────────────
+  //  Toast — brief centered feedback message
+  // ────────────────────────────────────────────────────────────────
+  const toastEl = document.getElementById('toast');
+  const toastLabelEl = document.getElementById('toastLabel');
+  const toastTextEl = document.getElementById('toastText');
+  let toastTimer = 0;
+  function showToast(label, text) {
+    toastLabelEl.textContent = label;
+    toastTextEl.textContent = text;
+    toastEl.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('visible'), 1500);
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  //  Collapsible "Advanced" section
+  // ────────────────────────────────────────────────────────────────
+  const advancedSection = document.getElementById('advancedSection');
+  const advancedToggle = document.getElementById('advancedToggle');
+  advancedToggle.addEventListener('click', () => {
+    const isOpen = advancedSection.classList.toggle('open');
+    advancedToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+
+  // ────────────────────────────────────────────────────────────────
+  //  Fullscreen toggle
+  // ────────────────────────────────────────────────────────────────
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  fullscreenBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    const active = !!document.fullscreenElement;
+    fullscreenBtn.classList.toggle('active', active);
+    fullscreenBtn.innerHTML = active
+      ? '<span class="ico">⤡</span>Exit'
+      : '<span class="ico">⤢</span>Fullscreen';
+  });
+
   // Try to restore state from URL before first render
   decodeStateFromUrl();
+  updateBrandAndJuliaLabel();
 
   resize();
   requestAnimationFrame(frame);
