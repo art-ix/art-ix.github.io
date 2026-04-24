@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>MANDELBROT · ∞</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07080a;
+    --panel: rgba(12, 14, 18, 0.72);
+    --panel-border: rgba(255, 255, 255, 0.08);
+    --ink: #e8e6e1;
+    --ink-dim: #8a8880;
+    --ink-faint: #4a4844;
+    --accent: #ff5a3c;
+    --accent-alt: #7dd3c0;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --serif: 'Instrument Serif', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--mono);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    touch-action: none;
+  }
+
+  #canvas {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+    cursor: grab;
+  }
+  #canvas:active { cursor: grabbing; }
+
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.12;
+    mix-blend-mode: overlay;
+    z-index: 2;
+  }
+
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 18px 22px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .brand { pointer-events: auto; }
+  .brand-title {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-shadow: 0 0 12px rgba(0,0,0,0.75), 0 1px 2px rgba(0,0,0,0.6);
+  }
+  .brand-title .dot { color: var(--accent); }
+  .brand-sub {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-top: 6px;
+    text-shadow: 0 0 8px rgba(0,0,0,0.9);
+  }
+  .brand-sub::before { content: '── '; color: var(--ink-faint); }
+
+  .hud-right {
+    pointer-events: auto;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-align: right;
+    color: var(--ink-dim);
+    line-height: 1.7;
+    text-shadow: 0 0 8px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.8);
+  }
+  .hud-right .val { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .hud-right .key { color: var(--ink-faint); text-transform: uppercase; font-size: 9.5px; letter-spacing: 0.2em; }
+  .hud-right .prec-dd { color: var(--accent-alt); }
+  .hud-right .prec-f32 { color: var(--ink-dim); }
+
+  /* Prominent precision pill in the HUD */
+  .prec-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--panel-border);
+    transition: all 0.25s;
+  }
+  .prec-pill::before {
+    content: '';
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor;
+  }
+  .prec-pill.is-dd {
+    color: var(--accent-alt);
+    border-color: rgba(125, 211, 192, 0.35);
+    background: rgba(125, 211, 192, 0.08);
+  }
+  .prec-pill.is-dd::before {
+    box-shadow: 0 0 10px var(--accent-alt);
+    animation: precPulse 1.3s ease-in-out infinite;
+  }
+  .prec-pill.is-f32 {
+    color: var(--ink-dim);
+  }
+  .prec-pill.is-forced {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  @keyframes precPulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%     { opacity: 0.5; transform: scale(0.85); }
+  }
+
+  .panel {
+    position: fixed;
+    bottom: 22px; left: 22px;
+    background: var(--panel);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border: 1px solid var(--panel-border);
+    border-radius: 2px;
+    padding: 18px 20px 16px;
+    min-width: 280px;
+    max-width: calc(100vw - 44px);
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s ease;
+    transform-origin: bottom left;
+  }
+  .panel.hidden {
+    transform: translateY(calc(100% + 40px));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Scrollbar inside panel (when content overflows on short screens) */
+  .panel::-webkit-scrollbar { width: 4px; }
+  .panel::-webkit-scrollbar-track { background: transparent; }
+  .panel::-webkit-scrollbar-thumb { background: var(--ink-faint); border-radius: 2px; }
+
+  .panel-header {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 9.5px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .panel-header-right {
+    display: inline-flex; align-items: center; gap: 12px;
+  }
+  .panel-header .live {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--accent);
+  }
+  .panel-header .live::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .panel-toggle {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--ink-dim);
+    width: 22px; height: 22px;
+    padding: 0;
+    font-size: 16px;
+    line-height: 1;
+    letter-spacing: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .panel-toggle:hover {
+    color: var(--ink);
+    border-color: var(--panel-border);
+  }
+
+  /* Pill that reveals the panel when it's hidden */
+  .show-pill {
+    position: fixed;
+    bottom: 22px; left: 22px;
+    padding: 10px 16px;
+    background: var(--panel);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border: 1px solid var(--panel-border);
+    border-radius: 2px;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    cursor: pointer;
+    z-index: 11;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(6px);
+    transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.2s, color 0.2s;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  .show-pill.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition-delay: 0.15s;
+  }
+  .show-pill:hover {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .show-pill .chev { color: var(--accent); margin-right: 8px; }
+  .show-pill:hover .chev { color: var(--bg); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .ctrl {
+    display: grid;
+    grid-template-columns: 90px 1fr 48px;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 0;
+  }
+  .ctrl label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .ctrl .readout {
+    font-size: 11px;
+    color: var(--ink);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%; height: 2px;
+    background: var(--ink-faint);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    background: var(--ink);
+    border: 2px solid var(--bg);
+    border-radius: 0;
+    cursor: grab;
+    transition: background 0.15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { background: var(--accent); }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    background: var(--ink);
+    border: 2px solid var(--bg);
+    border-radius: 0;
+    cursor: grab;
+  }
+
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--panel-border);
+  }
+  button {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  button:hover {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  button.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .palettes {
+    display: flex; gap: 4px;
+    margin-top: 10px;
+  }
+  .palette-btn {
+    flex: 1; height: 22px;
+    border: 1px solid var(--panel-border);
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .palette-btn:hover { transform: translateY(-2px); }
+  .palette-btn.active {
+    border-color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--bg);
+  }
+  .palette-btn[data-p="0"] { background: linear-gradient(90deg, #000, #ff5a3c, #ffd400, #fff); }
+  .palette-btn[data-p="1"] { background: linear-gradient(90deg, #000, #1a3a5c, #7dd3c0, #fff); }
+  .palette-btn[data-p="2"] { background: linear-gradient(90deg, #000, #4a0a4a, #ff00aa, #ffdd55); }
+  .palette-btn[data-p="3"] { background: linear-gradient(90deg, #fff, #888, #222, #000); }
+  .palette-btn[data-p="4"] { background: linear-gradient(90deg, #0a0a0a, #2a4d3a, #8fbc5a, #f5f5dc); }
+
+  .prec-mode-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    padding: 8px 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .prec-mode-btn:hover {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+  .prec-mode-btn.active {
+    background: var(--accent-alt);
+    color: var(--bg);
+    border-color: var(--accent-alt);
+  }
+
+  .help {
+    position: fixed;
+    bottom: 22px; right: 22px;
+    z-index: 10;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-dim);
+    text-align: right;
+    line-height: 1.8;
+    pointer-events: none;
+  }
+  .help kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    margin: 0 2px;
+  }
+
+  .panel, .topbar, .help {
+    animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  }
+  .topbar { animation-delay: 0.1s; }
+  .panel { animation-delay: 0.3s; }
+  .help { animation-delay: 0.5s; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .crosshair {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px; height: 40px;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .crosshair.visible { opacity: 0.6; }
+  .crosshair::before, .crosshair::after {
+    content: '';
+    position: absolute;
+    background: var(--accent);
+  }
+  .crosshair::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+  .crosshair::after { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+
+  /* Tablet */
+  @media (max-width: 860px) {
+    .panel { min-width: 260px; padding: 16px 18px 14px; }
+    .topbar { padding: 16px 18px; }
+    .brand-title { font-size: 24px; }
+    .help { font-size: 9.5px; }
+  }
+
+  /* Phone */
+  @media (max-width: 640px) {
+    .panel {
+      left: 10px; right: 10px; bottom: 10px;
+      min-width: 0;
+      padding: 14px 16px 12px;
+    }
+    .panel.hidden {
+      transform: translateY(calc(100% + 20px));
+    }
+    .show-pill {
+      left: 10px; bottom: 10px;
+      padding: 9px 14px;
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+    }
+    .help { display: none; }
+    .topbar {
+      padding: 12px 14px;
+      pointer-events: none;
+    }
+    .brand-title { font-size: 20px; }
+    .brand-sub {
+      font-size: 8.5px;
+      letter-spacing: 0.12em;
+      margin-top: 4px;
+    }
+    .brand-sub::before { content: ''; }
+
+    .hud-right { font-size: 10px; line-height: 1.65; }
+    .hud-right .key { display: none; }
+    .hud-right > div { display: inline-block; margin-left: 10px; }
+    .hud-right > div:first-child { margin-left: 0; }
+    .hud-right > div { display: block; margin-left: 0; }
+
+    .ctrl {
+      grid-template-columns: 72px 1fr 44px;
+      gap: 10px;
+      padding: 6px 0;
+    }
+    .ctrl label { font-size: 9.5px; letter-spacing: 0.1em; }
+  }
+
+  /* Very narrow phones */
+  @media (max-width: 380px) {
+    .brand-sub { display: none; }
+    .panel { padding: 12px 14px 10px; }
+    .ctrl {
+      grid-template-columns: 64px 1fr 40px;
+      gap: 8px;
+    }
+    .buttons { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* Landscape orientation on phone — panel can get too tall */
+  @media (max-height: 520px) and (orientation: landscape) {
+    .panel { max-height: calc(100vh - 80px); }
+    .topbar { padding: 10px 14px; }
+    .brand-title { font-size: 18px; }
+    .brand-sub { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+<div class="crosshair" id="crosshair"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-title">mandelbrot<span class="dot">.</span></div>
+    <div class="brand-sub">z → z² + c · perturbation theory</div>
+  </div>
+  <div class="hud-right" id="hud">
+    <div><span class="key">Re</span> &nbsp; <span class="val" id="re">—</span></div>
+    <div><span class="key">Im</span> &nbsp; <span class="val" id="im">—</span></div>
+    <div><span class="key">Zoom</span> &nbsp; <span class="val" id="zoom">1.00×</span></div>
+    <div><span class="key">FPS</span> &nbsp; <span class="val" id="fps">—</span></div>
+    <div style="margin-top:8px"><span class="prec-pill is-f32" id="precPill">● f32</span></div>
+  </div>
+</div>
+
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <span>Controls</span>
+    <span class="panel-header-right">
+      <span class="live">Live</span>
+      <button class="panel-toggle" id="panelToggle" title="Hide panel (H)" aria-label="Hide panel">−</button>
+    </span>
+  </div>
+
+  <div class="ctrl">
+    <label>Iterations</label>
+    <input type="range" id="iter" min="50" max="2000" value="400" step="10">
+    <span class="readout" id="iterVal">400</span>
+  </div>
+  <div class="ctrl">
+    <label>Color shift</label>
+    <input type="range" id="shift" min="0" max="100" value="0" step="1">
+    <span class="readout" id="shiftVal">0.00</span>
+  </div>
+  <div class="ctrl">
+    <label>Contrast</label>
+    <input type="range" id="contrast" min="5" max="100" value="30" step="1">
+    <span class="readout" id="contrastVal">0.30</span>
+  </div>
+
+  <div class="palettes">
+    <div class="palette-btn active" data-p="0" title="Ember"></div>
+    <div class="palette-btn" data-p="1" title="Glacier"></div>
+    <div class="palette-btn" data-p="2" title="Neon"></div>
+    <div class="palette-btn" data-p="3" title="Monochrome"></div>
+    <div class="palette-btn" data-p="4" title="Forest"></div>
+  </div>
+
+  <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--panel-border)">
+    <div style="display:flex; justify-content:space-between; align-items:center; font-size:9.5px; letter-spacing:0.25em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:8px">
+      <span>Precision</span>
+      <span style="color:var(--ink-dim); text-transform:none; letter-spacing:0.05em" id="precHint">auto-switch near limit</span>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:4px">
+      <button class="prec-mode-btn active" data-mode="auto">Auto</button>
+      <button class="prec-mode-btn" data-mode="f32">F32</button>
+      <button class="prec-mode-btn" data-mode="dd">HP</button>
+      <button class="prec-mode-btn" data-mode="split" title="Left half F32, right half perturbation">Split</button>
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button id="animBtn">▶ Animate</button>
+    <button id="cycleBtn">Color cycle</button>
+    <button id="diveBtn">Dive</button>
+    <button id="resetBtn">Reset</button>
+    <button id="saveBtn">⬇ Save PNG</button>
+    <button id="copyLinkBtn">🔗 Share</button>
+  </div>
+</div>
+
+<button class="show-pill" id="showPill" title="Show controls (H)"><span class="chev">▴</span>Controls</button>
+
+<div class="help">
+  <kbd>Drag</kbd> to pan &nbsp;·&nbsp; <kbd>Scroll</kbd> to zoom<br>
+  <kbd>Double-click</kbd> zoom in &nbsp;·&nbsp; <kbd>Shift+Click</kbd> zoom out<br>
+  Press <kbd>H</kbd> to hide panel
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('canvas');
+  const gl = canvas.getContext('webgl', { antialias: false, preserveDrawingBuffer: true });
+  if (!gl) {
+    document.body.innerHTML = '<div style="padding:40px;font-family:monospace;color:#e8e6e1">WebGL not supported.</div>';
+    return;
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  //  Shared palette + coloring GLSL — injected into both shaders
+  // ────────────────────────────────────────────────────────────────
+  const SHARED_GLSL = `
+    vec3 palEmber(float t) {
+      vec3 a = vec3(0.0), b = vec3(1.0,0.35,0.23), c = vec3(1.0,0.83,0.0), d = vec3(1.0,1.0,0.95);
+      if (t < 0.33) return mix(a,b,t/0.33);
+      if (t < 0.66) return mix(b,c,(t-0.33)/0.33);
+      return mix(c,d,(t-0.66)/0.34);
+    }
+    vec3 palGlacier(float t) {
+      vec3 a = vec3(0.02,0.03,0.06), b = vec3(0.10,0.23,0.36), c = vec3(0.49,0.83,0.75), d = vec3(0.95,0.98,1.0);
+      if (t < 0.33) return mix(a,b,t/0.33);
+      if (t < 0.66) return mix(b,c,(t-0.33)/0.33);
+      return mix(c,d,(t-0.66)/0.34);
+    }
+    vec3 palNeon(float t) {
+      vec3 a = vec3(0.02,0.0,0.05), b = vec3(0.29,0.04,0.29), c = vec3(1.0,0.0,0.67), d = vec3(1.0,0.87,0.33);
+      if (t < 0.33) return mix(a,b,t/0.33);
+      if (t < 0.66) return mix(b,c,(t-0.33)/0.33);
+      return mix(c,d,(t-0.66)/0.34);
+    }
+    vec3 palMono(float t) { return vec3(pow(t, 0.7)); }
+    vec3 palForest(float t) {
+      vec3 a = vec3(0.04), b = vec3(0.16,0.30,0.23), c = vec3(0.56,0.74,0.35), d = vec3(0.96,0.96,0.86);
+      if (t < 0.33) return mix(a,b,t/0.33);
+      if (t < 0.66) return mix(b,c,(t-0.33)/0.33);
+      return mix(c,d,(t-0.66)/0.34);
+    }
+    vec3 applyPalette(float t, int p) {
+      if (p == 0) return palEmber(t);
+      if (p == 1) return palGlacier(t);
+      if (p == 2) return palNeon(t);
+      if (p == 3) return palMono(t);
+      return palForest(t);
+    }
+
+    vec3 colorFromIter(float iter, float magSq, float shift, float contrast, int pal) {
+      float log_zn = log(magSq) * 0.5;
+      float nu = log(log_zn / log(2.0)) / log(2.0);
+      float smoothI = iter + 1.0 - nu;
+      float t = fract(smoothI * contrast * 0.01 + shift);
+      return applyPalette(t, pal);
+    }
+  `;
+
+  const VS = `
+    attribute vec2 a_pos;
+    void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
+  `;
+
+  // ────────────────────────────────────────────────────────────────
+  //  Shallow shader — plain float32 (fast path)
+  // ────────────────────────────────────────────────────────────────
+  const FS_F32 = `
+    precision highp float;
+    uniform vec2  u_resolution;
+    uniform vec2  u_center;
+    uniform float u_scale;
+    uniform float u_maxIter;
+    uniform float u_shift;
+    uniform float u_contrast;
+    uniform int   u_palette;
+
+    ${SHARED_GLSL}
+
+    void main() {
+      vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
+      vec2 c = u_center + uv * 2.0 * u_scale;
+
+      float q = (c.x - 0.25) * (c.x - 0.25) + c.y * c.y;
+      if (q * (q + (c.x - 0.25)) < 0.25 * c.y * c.y) {
+        gl_FragColor = vec4(applyPalette(0.0, u_palette), 1.0); return;
+      }
+      if ((c.x + 1.0) * (c.x + 1.0) + c.y * c.y < 0.0625) {
+        gl_FragColor = vec4(applyPalette(0.0, u_palette), 1.0); return;
+      }
+
+      vec2 z = vec2(0.0);
+      float iter = 0.0;
+      bool escaped = false;
+      for (int i = 0; i < 2000; i++) {
+        if (float(i) >= u_maxIter) break;
+        z = vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y) + c;
+        if (dot(z,z) > 256.0) { iter = float(i); escaped = true; break; }
+      }
+      if (!escaped) { gl_FragColor = vec4(applyPalette(0.0, u_palette), 1.0); return; }
+      gl_FragColor = vec4(colorFromIter(iter, dot(z,z), u_shift, u_contrast, u_palette), 1.0);
+    }
+  `;
+
+  // ────────────────────────────────────────────────────────────────
+  //  Deep shader — PERTURBATION THEORY with glitch detection & rebase
+  //
+  //  Strategy: one reference orbit in 64-bit JS doubles → texture.
+  //  Shader computes per-pixel delta δz using:
+  //      δz_{n+1} = 2·z_ref_n·δz_n + δz_n² + δc
+  //
+  //  Problem: when z_ref passes close to zero, linear approximation
+  //  breaks (δz² dominates over 2·z_ref·δz). This manifests as bad
+  //  pixel colors and flickering on zoom.
+  //
+  //  Fix (Pauldelbrot criterion):
+  //    if |z_ref + δz|² < |z_ref|² * EPSILON  →  rebase
+  //  Rebase: make the full value z the new "delta from zero", restart
+  //  sampling from iteration 0. The pixel's orbit continues correctly.
+  // ────────────────────────────────────────────────────────────────
+  const FS_PT = `
+    precision highp float;
+    uniform vec2  u_resolution;
+    uniform float u_scale;
+    uniform vec2  u_viewOffset;   // (view_center - reference_point), f32 precision
+    uniform float u_maxIter;
+    uniform float u_refLength;
+    uniform sampler2D u_refOrbit;
+    uniform float u_shift;
+    uniform float u_contrast;
+    uniform int   u_palette;
+
+    ${SHARED_GLSL}
+
+    void main() {
+      vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
+      // dc = (this_pixel - reference_point) = viewOffset + pixel_offset_within_view
+      vec2 dc = u_viewOffset + uv * 2.0 * u_scale;
+
+      vec2 dz = vec2(0.0);
+      float iter = 0.0;
+      bool escaped = false;
+      float magSq = 0.0;
+      float invLen = 1.0 / u_refLength;
+      float refIdx = 0.0;
+
+      for (int i = 0; i < 2000; i++) {
+        if (float(i) >= u_maxIter) break;
+
+        vec4 ref = texture2D(u_refOrbit, vec2((refIdx + 0.5) * invLen, 0.5));
+        vec2 z_ref = vec2(ref.r, ref.b);
+
+        // δz_new = 2·z_ref·δz + δz² + δc   (all complex mul)
+        vec2 refDz = vec2(
+          z_ref.x * dz.x - z_ref.y * dz.y,
+          z_ref.x * dz.y + z_ref.y * dz.x
+        );
+        vec2 dzSq = vec2(dz.x * dz.x - dz.y * dz.y, 2.0 * dz.x * dz.y);
+        dz = 2.0 * refDz + dzSq + dc;
+        refIdx += 1.0;
+
+        // Full z for this pixel
+        vec4 refNext = texture2D(u_refOrbit, vec2((refIdx + 0.5) * invLen, 0.5));
+        vec2 z_ref_next = vec2(refNext.r, refNext.b);
+        vec2 zFull = z_ref_next + dz;
+        float zFullSq = dot(zFull, zFull);
+
+        // Escape test
+        if (zFullSq > 256.0) { iter = float(i); magSq = zFullSq; escaped = true; break; }
+
+        // Pauldelbrot glitch check: if the full value is much smaller than
+        // the reference, linear approximation is failing. Rebase aggressively.
+        // Threshold 1e-3 is the value used in Kalles Fraktaler and similar.
+        float refSq = dot(z_ref_next, z_ref_next);
+        if (zFullSq < refSq * 1e-3) {
+          dz = zFull;
+          refIdx = 0.0;
+        }
+        // Also rebase if we ran off the end of the reference orbit
+        else if (refIdx >= u_refLength - 1.0) {
+          dz = zFull;
+          refIdx = 0.0;
+        }
+      }
+
+      if (!escaped) { gl_FragColor = vec4(applyPalette(0.0, u_palette), 1.0); return; }
+      gl_FragColor = vec4(colorFromIter(iter, magSq, u_shift, u_contrast, u_palette), 1.0);
+    }
+  `;
+
+  function compile(type, src) {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      console.error('Shader compile error:', gl.getShaderInfoLog(sh));
+      return null;
+    }
+    return sh;
+  }
+  function link(vsSrc, fsSrc) {
+    const p = gl.createProgram();
+    gl.attachShader(p, compile(gl.VERTEX_SHADER, vsSrc));
+    gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fsSrc));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+      console.error('Link error:', gl.getProgramInfoLog(p));
+    }
+    return p;
+  }
+
+  const progF32 = link(VS, FS_F32);
+  const progPT  = link(VS, FS_PT);
+
+  // ────────────────────────────────────────────────────────────────
+  //  Split-view shader — F32 on left, perturbation on right, with
+  //  a visible dividing line. Definitive visual diagnostic.
+  // ────────────────────────────────────────────────────────────────
+  const FS_SPLIT = `
+    precision highp float;
+    uniform vec2  u_resolution;
+    uniform vec2  u_center;       // f32 center (for f32 path)
+    uniform float u_scale;
+    uniform vec2  u_viewOffset;   // (view_center - reference_point), for perturbation
+    uniform float u_maxIter;
+    uniform float u_refLength;
+    uniform sampler2D u_refOrbit;
+    uniform float u_shift;
+    uniform float u_contrast;
+    uniform int   u_palette;
+
+    ${SHARED_GLSL}
+
+    // --- F32 path ---
+    vec3 renderF32(vec2 uv) {
+      vec2 c = u_center + uv * 2.0 * u_scale;
+      float q = (c.x - 0.25) * (c.x - 0.25) + c.y * c.y;
+      if (q * (q + (c.x - 0.25)) < 0.25 * c.y * c.y)
+        return applyPalette(0.0, u_palette);
+      if ((c.x + 1.0) * (c.x + 1.0) + c.y * c.y < 0.0625)
+        return applyPalette(0.0, u_palette);
+      vec2 z = vec2(0.0);
+      float iter = 0.0; bool escaped = false;
+      for (int i = 0; i < 2000; i++) {
+        if (float(i) >= u_maxIter) break;
+        z = vec2(z.x*z.x - z.y*z.y, 2.0*z.x*z.y) + c;
+        if (dot(z,z) > 256.0) { iter = float(i); escaped = true; break; }
+      }
+      if (!escaped) return applyPalette(0.0, u_palette);
+      return colorFromIter(iter, dot(z,z), u_shift, u_contrast, u_palette);
+    }
+
+    // --- Perturbation path (with glitch detection + rebase) ---
+    vec3 renderPT(vec2 uv) {
+      vec2 dc = u_viewOffset + uv * 2.0 * u_scale;
+      vec2 dz = vec2(0.0);
+      float iter = 0.0; bool escaped = false; float magSq = 0.0;
+      float invLen = 1.0 / u_refLength;
+      float refIdx = 0.0;
+
+      for (int i = 0; i < 2000; i++) {
+        if (float(i) >= u_maxIter) break;
+
+        vec4 ref = texture2D(u_refOrbit, vec2((refIdx + 0.5) * invLen, 0.5));
+        vec2 z_ref = vec2(ref.r, ref.b);
+
+        vec2 refDz = vec2(
+          z_ref.x * dz.x - z_ref.y * dz.y,
+          z_ref.x * dz.y + z_ref.y * dz.x
+        );
+        vec2 dzSq = vec2(dz.x * dz.x - dz.y * dz.y, 2.0 * dz.x * dz.y);
+        dz = 2.0 * refDz + dzSq + dc;
+        refIdx += 1.0;
+
+        vec4 refNext = texture2D(u_refOrbit, vec2((refIdx + 0.5) * invLen, 0.5));
+        vec2 z_ref_next = vec2(refNext.r, refNext.b);
+        vec2 zFull = z_ref_next + dz;
+        float zFullSq = dot(zFull, zFull);
+
+        if (zFullSq > 256.0) { iter = float(i); magSq = zFullSq; escaped = true; break; }
+
+        float refSq = dot(z_ref_next, z_ref_next);
+        if (zFullSq < refSq * 1e-3) {
+          dz = zFull;
+          refIdx = 0.0;
+        }
+        else if (refIdx >= u_refLength - 1.0) {
+          dz = zFull;
+          refIdx = 0.0;
+        }
+      }
+      if (!escaped) return applyPalette(0.0, u_palette);
+      return colorFromIter(iter, magSq, u_shift, u_contrast, u_palette);
+    }
+
+    void main() {
+      vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
+      float midX = u_resolution.x * 0.5;
+      float dist = abs(gl_FragCoord.x - midX);
+
+      vec3 col = (gl_FragCoord.x < midX) ? renderF32(uv) : renderPT(uv);
+
+      // Bright dividing line
+      if (dist < 1.5) col = vec3(1.0, 0.35, 0.23);
+
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+
+  const progSplit = link(VS, FS_SPLIT);
+  const locSplit = {
+    aPos: gl.getAttribLocation(progSplit, 'a_pos'),
+    uRes: gl.getUniformLocation(progSplit, 'u_resolution'),
+    uCenter: gl.getUniformLocation(progSplit, 'u_center'),
+    uScale: gl.getUniformLocation(progSplit, 'u_scale'),
+    uViewOffset: gl.getUniformLocation(progSplit, 'u_viewOffset'),
+    uMaxIter: gl.getUniformLocation(progSplit, 'u_maxIter'),
+    uRefLength: gl.getUniformLocation(progSplit, 'u_refLength'),
+    uRefOrbit: gl.getUniformLocation(progSplit, 'u_refOrbit'),
+    uShift: gl.getUniformLocation(progSplit, 'u_shift'),
+    uContrast: gl.getUniformLocation(progSplit, 'u_contrast'),
+    uPalette: gl.getUniformLocation(progSplit, 'u_palette'),
+  };
+
+  const locF32 = {
+    aPos: gl.getAttribLocation(progF32, 'a_pos'),
+    uRes: gl.getUniformLocation(progF32, 'u_resolution'),
+    uCenter: gl.getUniformLocation(progF32, 'u_center'),
+    uScale: gl.getUniformLocation(progF32, 'u_scale'),
+    uMaxIter: gl.getUniformLocation(progF32, 'u_maxIter'),
+    uShift: gl.getUniformLocation(progF32, 'u_shift'),
+    uContrast: gl.getUniformLocation(progF32, 'u_contrast'),
+    uPalette: gl.getUniformLocation(progF32, 'u_palette'),
+  };
+  const locPT = {
+    aPos: gl.getAttribLocation(progPT, 'a_pos'),
+    uRes: gl.getUniformLocation(progPT, 'u_resolution'),
+    uScale: gl.getUniformLocation(progPT, 'u_scale'),
+    uViewOffset: gl.getUniformLocation(progPT, 'u_viewOffset'),
+    uMaxIter: gl.getUniformLocation(progPT, 'u_maxIter'),
+    uRefLength: gl.getUniformLocation(progPT, 'u_refLength'),
+    uRefOrbit: gl.getUniformLocation(progPT, 'u_refOrbit'),
+    uShift: gl.getUniformLocation(progPT, 'u_shift'),
+    uContrast: gl.getUniformLocation(progPT, 'u_contrast'),
+    uPalette: gl.getUniformLocation(progPT, 'u_palette'),
+  };
+
+  // Enable float textures so we can store reference orbit at high precision.
+  const floatExt = gl.getExtension('OES_texture_float');
+  if (!floatExt) {
+    console.warn('OES_texture_float not available — deep zoom may fail');
+  }
+
+  // Reference orbit texture — Nx1 RGBA float32, re-uploaded when needed.
+  const orbitTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, orbitTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  // Compute how many iterations a point's orbit survives before escaping.
+  // Used to pick a good reference — longer-surviving points give better
+  // perturbation approximations for surrounding pixels.
+  function orbitLongevity(cx, cy, maxIter) {
+    let zx = 0, zy = 0;
+    for (let i = 0; i < maxIter; i++) {
+      const zxSq = zx * zx, zySq = zy * zy;
+      if (zxSq + zySq > 1e12) return i;
+      const zxNew = zxSq - zySq + cx;
+      zy = 2 * zx * zy + cy;
+      zx = zxNew;
+    }
+    return maxIter;
+  }
+
+  // Pick a reference point: start with view center, but if it escapes early,
+  // sample a handful of nearby points and take whichever survives longest.
+  function pickReferencePoint(viewCx, viewCy, scale, maxIter) {
+    let bestCx = viewCx, bestCy = viewCy;
+    let bestLife = orbitLongevity(viewCx, viewCy, maxIter);
+    // If the center already survives most iterations, done.
+    if (bestLife > maxIter * 0.9) return [bestCx, bestCy];
+
+    // Otherwise probe a small grid around the center within ~half the view.
+    const r = scale * 0.5;
+    const offsets = [
+      [ r,  0], [-r,  0], [ 0,  r], [ 0, -r],
+      [ r*0.5,  r*0.5], [-r*0.5,  r*0.5],
+      [ r*0.5, -r*0.5], [-r*0.5, -r*0.5],
+    ];
+    for (const [dx, dy] of offsets) {
+      const cx = viewCx + dx, cy = viewCy + dy;
+      const life = orbitLongevity(cx, cy, maxIter);
+      if (life > bestLife) {
+        bestLife = life;
+        bestCx = cx; bestCy = cy;
+      }
+    }
+    return [bestCx, bestCy];
+  }
+
+  let orbitBuffer = new Float32Array(4);
+  let orbitLength = 1;
+  // The reference is "pinned" — we don't recompute it every pan/zoom.
+  // We only recompute when:
+  //   (a) maxIter increased (need more orbit samples), or
+  //   (b) the view has moved too far from the reference point, or
+  //   (c) iterations setting changed significantly.
+  const refState = {
+    cx: NaN, cy: NaN,      // reference point in full JS-double precision
+    maxIter: 0,
+    valid: false,
+  };
+
+  // Decide if we need a fresh reference orbit for this (view_cx, view_cy, scale, maxIter).
+  // If so, pick the view center as the new reference and compute.
+  function ensureReferenceOrbit(viewCx, viewCy, scale, maxIter) {
+    // How far is the view from the current reference, in units of "view scale"?
+    const dx = viewCx - refState.cx;
+    const dy = viewCy - refState.cy;
+    const dist = Math.hypot(dx, dy);
+    // If the reference point is further from the view center than ~one screen-width
+    // (scale is half-height; view width ~ 2*scale*aspect ~ 3*scale), re-reference.
+    // Also re-reference when iteration count grew.
+    const tooFar = dist > scale * 1.0;
+    const needMoreIter = maxIter > refState.maxIter;
+    if (refState.valid && !tooFar && !needMoreIter) return;
+
+    // Pick a reference point that has a long-surviving orbit — better
+    // aproximation for surrounding pixels than a near-edge point.
+    const [cx, cy] = pickReferencePoint(viewCx, viewCy, scale, maxIter);
+    if (orbitBuffer.length < maxIter * 4) {
+      orbitBuffer = new Float32Array(maxIter * 4);
+    }
+    const buf = orbitBuffer;
+    let zx = 0, zy = 0;
+    for (let i = 0; i < maxIter; i++) {
+      buf[i * 4]     = zx;
+      buf[i * 4 + 1] = 0;
+      buf[i * 4 + 2] = zy;
+      buf[i * 4 + 3] = 0;
+      const zxSq = zx * zx, zySq = zy * zy;
+      if (zxSq + zySq > 1e12) {
+        // Reference escaped → fill remainder with last value
+        for (let j = i + 1; j < maxIter; j++) {
+          buf[j * 4] = zx;
+          buf[j * 4 + 2] = zy;
+        }
+        break;
+      }
+      const zxNew = zxSq - zySq + cx;
+      const zyNew = 2 * zx * zy + cy;
+      zx = zxNew;
+      zy = zyNew;
+    }
+    orbitLength = maxIter;
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, orbitTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, maxIter, 1, 0, gl.RGBA, gl.FLOAT,
+                  orbitBuffer.subarray(0, maxIter * 4));
+    refState.cx = cx;
+    refState.cy = cy;
+    refState.maxIter = maxIter;
+    refState.valid = true;
+  }
+
+  // Invalidate the reference when the user hits Reset or we otherwise jump.
+  function invalidateReference() {
+    refState.valid = false;
+    refState.cx = NaN;
+    refState.cy = NaN;
+  }
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+
+  // ────────────────────────────────────────────────────────────────
+  //  State — center stored as JS double for full precision.
+  //  Split to (hi, lo) f32 before uploading to DD shader.
+  // ────────────────────────────────────────────────────────────────
+  const state = {
+    cx: -0.5, cy: 0.0,
+    scale: 1.4,
+    maxIter: 400,
+    shift: 0,
+    contrast: 0.3,
+    palette: 0,
+    needsRender: true,
+    animating: false,
+    cycling: false,
+    diving: false,
+    diveTarget: null,
+    interacting: false,
+    idleFrames: 0,
+    usingDD: false,
+  };
+
+  // f32 starts showing pixelation around scale ~3e-5; switch to perturbation earlier.
+  const DD_THRESHOLD = 5e-5;
+  // Perturbation limit — JS doubles give ~1e-15 rel precision; leave some headroom.
+  const DD_FLOOR = 1e-14;
+
+  // Manual override: 'auto' | 'f32' | 'dd' (dd = perturbation) | 'split'
+  let precMode = 'auto';
+
+  const divePoints = [
+    { cx: -0.743643887037151, cy:  0.131825904205330, name: 'Mini brot'    },
+    { cx: -0.74529,           cy:  0.11307,          name: 'Seahorse'      },
+    { cx:  0.432539867,       cy:  0.226118675,      name: 'Spiral'        },
+    { cx: -1.25066,           cy:  0.02012,          name: 'Elephant'      },
+    { cx: -0.16070135,        cy:  1.0375665,        name: 'Triple spiral' },
+    { cx: -0.77568377,        cy:  0.13646737,       name: 'Julia-like'    },
+  ];
+
+  // ────────────────────────────────────────────────────────────────
+  //  Resize — adaptive DPR: full res idle, reduced during interaction
+  // ────────────────────────────────────────────────────────────────
+  function resize() {
+    const baseDpr = Math.min(window.devicePixelRatio || 1, 2);
+    // While interacting in DD mode, drop resolution for smoothness
+    const qScale = (state.interacting && state.usingDD) ? 0.55 : 1.0;
+    const w = Math.max(1, Math.floor(window.innerWidth * baseDpr * qScale));
+    const h = Math.max(1, Math.floor(window.innerHeight * baseDpr * qScale));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+      gl.viewport(0, 0, w, h);
+    }
+    state.needsRender = true;
+  }
+  window.addEventListener('resize', resize);
+
+  // ────────────────────────────────────────────────────────────────
+  //  Render
+  // ────────────────────────────────────────────────────────────────
+  const precPill = document.getElementById('precPill');
+  const precHint = document.getElementById('precHint');
+  const reEl   = document.getElementById('re');
+  const imEl   = document.getElementById('im');
+  const zoomEl = document.getElementById('zoom');
+  const fpsEl  = document.getElementById('fps');
+
+  let lastT = performance.now();
+  let frameCount = 0;
+
+  function setProgramAndDraw() {
+    // Resolve effective precision based on manual override + auto threshold
+    let useDD, useSplit = false;
+    if (precMode === 'f32') { useDD = false; }
+    else if (precMode === 'dd') { useDD = true; }
+    else if (precMode === 'split') { useSplit = true; useDD = true; }
+    else useDD = state.scale < DD_THRESHOLD;
+
+    if (useDD !== state.usingDD || state._lastPrecMode !== precMode) {
+      state.usingDD = useDD;
+      state._lastPrecMode = precMode;
+      const labels = { 'auto': useDD ? '● hp' : '● f32', 'f32': '● f32', 'dd': '● hp', 'split': '● f32 | hp' };
+      precPill.textContent = labels[precMode];
+      precPill.classList.toggle('is-dd', useDD && !useSplit);
+      precPill.classList.toggle('is-f32', !useDD);
+      precPill.classList.toggle('is-forced', precMode !== 'auto');
+    }
+
+    // Make sure reference orbit is up-to-date if we'll need it
+    if (useSplit || useDD) {
+      ensureReferenceOrbit(state.cx, state.cy, state.scale, state.maxIter);
+    }
+
+    // viewOffset = (view_center - reference_point), computed as JS doubles,
+    // then truncated to f32. At deep zoom the difference is tiny so the
+    // truncation loses no meaningful precision.
+    const voX = state.cx - refState.cx;
+    const voY = state.cy - refState.cy;
+
+    if (useSplit) {
+      gl.useProgram(progSplit);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.enableVertexAttribArray(locSplit.aPos);
+      gl.vertexAttribPointer(locSplit.aPos, 2, gl.FLOAT, false, 0, 0);
+
+      gl.uniform2f(locSplit.uRes, canvas.width, canvas.height);
+      gl.uniform2f(locSplit.uCenter, state.cx, state.cy);
+      gl.uniform1f(locSplit.uScale, state.scale);
+      gl.uniform2f(locSplit.uViewOffset, voX, voY);
+      gl.uniform1f(locSplit.uMaxIter, state.maxIter);
+      gl.uniform1f(locSplit.uRefLength, orbitLength);
+      gl.uniform1f(locSplit.uShift, state.shift);
+      gl.uniform1f(locSplit.uContrast, state.contrast);
+      gl.uniform1i(locSplit.uPalette, state.palette);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, orbitTex);
+      gl.uniform1i(locSplit.uRefOrbit, 0);
+    } else if (useDD) {
+      gl.useProgram(progPT);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.enableVertexAttribArray(locPT.aPos);
+      gl.vertexAttribPointer(locPT.aPos, 2, gl.FLOAT, false, 0, 0);
+
+      gl.uniform2f(locPT.uRes, canvas.width, canvas.height);
+      gl.uniform1f(locPT.uScale, state.scale);
+      gl.uniform2f(locPT.uViewOffset, voX, voY);
+      gl.uniform1f(locPT.uMaxIter, state.maxIter);
+      gl.uniform1f(locPT.uRefLength, orbitLength);
+      gl.uniform1f(locPT.uShift, state.shift);
+      gl.uniform1f(locPT.uContrast, state.contrast);
+      gl.uniform1i(locPT.uPalette, state.palette);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, orbitTex);
+      gl.uniform1i(locPT.uRefOrbit, 0);
+    } else {
+      gl.useProgram(progF32);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.enableVertexAttribArray(locF32.aPos);
+      gl.vertexAttribPointer(locF32.aPos, 2, gl.FLOAT, false, 0, 0);
+
+      gl.uniform2f(locF32.uRes, canvas.width, canvas.height);
+      gl.uniform2f(locF32.uCenter, state.cx, state.cy);
+      gl.uniform1f(locF32.uScale, state.scale);
+      gl.uniform1f(locF32.uMaxIter, state.maxIter);
+      gl.uniform1f(locF32.uShift, state.shift);
+      gl.uniform1f(locF32.uContrast, state.contrast);
+      gl.uniform1i(locF32.uPalette, state.palette);
+    }
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  function formatCoord(n) {
+    const absN = Math.abs(n);
+    if (absN < 1e-6 && absN > 0) return n.toExponential(6);
+    const digits = Math.min(14, Math.max(4, Math.round(-Math.log10(state.scale) + 3)));
+    return n.toFixed(digits);
+  }
+
+  function updateHud() {
+    reEl.textContent = formatCoord(state.cx);
+    imEl.textContent = (state.cy >= 0 ? '+' : '') + formatCoord(state.cy) + 'i';
+    const z = 1.4 / state.scale;
+    zoomEl.textContent = z < 1e4 ? z.toFixed(2) + '×' : z.toExponential(2) + '×';
+  }
+
+  let animStart = 0, animBaseScale = 0.005, animCenter = {x:0, y:0};
+  function startOrbitAnim() {
+    animStart = performance.now();
+    const p = divePoints[Math.floor(Math.random() * divePoints.length)];
+    animCenter = { x: p.cx, y: p.cy };
+    animBaseScale = 0.005;
+  }
+
+  function frame() {
+    let dirty = state.needsRender;
+
+    if (state.cycling) {
+      state.shift = (state.shift + 0.003) % 1.0;
+      dirty = true;
+    }
+
+    if (state.animating) {
+      const t = (performance.now() - animStart) / 1000;
+      const breath = 1 + 0.7 * Math.sin(t * 0.3);
+      state.scale = animBaseScale * breath;
+      const r = animBaseScale * 1.2;
+      state.cx = animCenter.x + r * Math.cos(t * 0.25);
+      state.cy = animCenter.y + r * Math.sin(t * 0.25);
+      state.maxIter = 600;
+      dirty = true;
+    }
+
+    if (state.diving && state.diveTarget) {
+      const dt = state.diveTarget;
+      state.scale *= 0.985;
+      state.cx += (dt.cx - state.cx) * 0.04;
+      state.cy += (dt.cy - state.cy) * 0.04;
+      const depth = Math.log10(1.4 / state.scale);
+      state.maxIter = Math.min(2000, Math.floor(300 + depth * 200));
+      iterSlider.value = state.maxIter;
+      iterVal.textContent = state.maxIter;
+      if (state.scale < DD_FLOOR) stopAllAnimations();
+      dirty = true;
+    }
+
+    // Return to full resolution once interaction ends
+    if (!dirty && state.interacting) {
+      state.idleFrames++;
+      if (state.idleFrames > 4) {
+        state.interacting = false;
+        state.idleFrames = 0;
+        resize();
+        dirty = true;
+      }
+    }
+
+    if (dirty) {
+      setProgramAndDraw();
+      state.needsRender = false;
+      updateHud();
+      scheduleUrlUpdate();
+    }
+
+    frameCount++;
+    const now = performance.now();
+    if (now - lastT >= 500) {
+      const fps = Math.round(frameCount * 1000 / (now - lastT));
+      fpsEl.textContent = fps;
+      frameCount = 0;
+      lastT = now;
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  //  Interaction
+  // ────────────────────────────────────────────────────────────────
+  function screenToComplex(sx, sy) {
+    const rect = canvas.getBoundingClientRect();
+    const nx = (sx - rect.left - rect.width / 2) / rect.height;
+    const ny = (rect.height / 2 - (sy - rect.top)) / rect.height;
+    return {
+      x: state.cx + nx * 2 * state.scale,
+      y: state.cy + ny * 2 * state.scale,
+    };
+  }
+
+  function markInteracting() {
+    state.idleFrames = 0;
+    if (!state.interacting) {
+      state.interacting = true;
+      resize();
+    }
+  }
+
+  let dragging = false, lastX = 0, lastY = 0;
+  canvas.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    dragging = true;
+    lastX = e.clientX; lastY = e.clientY;
+    stopAllAnimations();
+    markInteracting();
+  });
+  window.addEventListener('mouseup', () => { dragging = false; });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    const rect = canvas.getBoundingClientRect();
+    state.cx -= (dx / rect.height) * 2 * state.scale;
+    state.cy += (dy / rect.height) * 2 * state.scale;
+    state.needsRender = true;
+    markInteracting();
+  });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    stopAllAnimations();
+    const p = screenToComplex(e.clientX, e.clientY);
+    const factor = Math.exp(e.deltaY * 0.0015);
+    state.cx = p.x + (state.cx - p.x) * factor;
+    state.cy = p.y + (state.cy - p.y) * factor;
+    state.scale = Math.max(state.scale * factor, DD_FLOOR);
+    state.needsRender = true;
+    markInteracting();
+  }, { passive: false });
+
+  canvas.addEventListener('dblclick', e => {
+    stopAllAnimations();
+    const p = screenToComplex(e.clientX, e.clientY);
+    const factor = e.shiftKey ? 2.0 : 0.5;
+    state.cx = p.x + (state.cx - p.x) * factor;
+    state.cy = p.y + (state.cy - p.y) * factor;
+    state.scale = Math.max(state.scale * factor, DD_FLOOR);
+    state.needsRender = true;
+    markInteracting();
+  });
+
+  let touches = [];
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    touches = Array.from(e.touches).map(t => ({ id: t.identifier, x: t.clientX, y: t.clientY }));
+    stopAllAnimations();
+    markInteracting();
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const now = Array.from(e.touches).map(t => ({ id: t.identifier, x: t.clientX, y: t.clientY }));
+    if (now.length === 1 && touches.length === 1) {
+      const dx = now[0].x - touches[0].x;
+      const dy = now[0].y - touches[0].y;
+      const rect = canvas.getBoundingClientRect();
+      state.cx -= (dx / rect.height) * 2 * state.scale;
+      state.cy += (dy / rect.height) * 2 * state.scale;
+    } else if (now.length === 2 && touches.length === 2) {
+      const d0 = Math.hypot(touches[0].x - touches[1].x, touches[0].y - touches[1].y);
+      const d1 = Math.hypot(now[0].x - now[1].x, now[0].y - now[1].y);
+      const cx0 = (touches[0].x + touches[1].x) / 2;
+      const cy0 = (touches[0].y + touches[1].y) / 2;
+      const p = screenToComplex(cx0, cy0);
+      const factor = d0 / Math.max(d1, 0.001);
+      state.cx = p.x + (state.cx - p.x) * factor;
+      state.cy = p.y + (state.cy - p.y) * factor;
+      state.scale = Math.max(state.scale * factor, DD_FLOOR);
+    }
+    touches = now;
+    state.needsRender = true;
+    markInteracting();
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', e => {
+    touches = Array.from(e.touches).map(t => ({ id: t.identifier, x: t.clientX, y: t.clientY }));
+  });
+
+  // ────────────────────────────────────────────────────────────────
+  //  UI controls
+  // ────────────────────────────────────────────────────────────────
+  const iterSlider = document.getElementById('iter');
+  const iterVal = document.getElementById('iterVal');
+  const shiftSlider = document.getElementById('shift');
+  const shiftVal = document.getElementById('shiftVal');
+  const contrastSlider = document.getElementById('contrast');
+  const contrastVal = document.getElementById('contrastVal');
+
+  iterSlider.addEventListener('input', () => {
+    state.maxIter = parseInt(iterSlider.value);
+    iterVal.textContent = state.maxIter;
+    state.needsRender = true;
+  });
+  shiftSlider.addEventListener('input', () => {
+    state.shift = parseInt(shiftSlider.value) / 100;
+    shiftVal.textContent = state.shift.toFixed(2);
+    state.needsRender = true;
+  });
+  contrastSlider.addEventListener('input', () => {
+    state.contrast = parseInt(contrastSlider.value) / 100;
+    contrastVal.textContent = state.contrast.toFixed(2);
+    state.needsRender = true;
+  });
+
+  document.querySelectorAll('.palette-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.palette = parseInt(btn.dataset.p);
+      state.needsRender = true;
+    });
+  });
+
+  // Precision mode selector
+  document.querySelectorAll('.prec-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.prec-mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      precMode = btn.dataset.mode;
+      const hints = {
+        'auto':  'auto-switch near limit',
+        'f32':   'forced — pixelates at deep zoom',
+        'dd':    'perturbation — deep zoom',
+        'split': 'left: f32 · right: perturbation',
+      };
+      precHint.textContent = hints[precMode];
+      state.needsRender = true;
+    });
+  });
+
+  const animBtn = document.getElementById('animBtn');
+  const cycleBtn = document.getElementById('cycleBtn');
+  const diveBtn = document.getElementById('diveBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const crosshair = document.getElementById('crosshair');
+
+  animBtn.addEventListener('click', () => {
+    state.animating = !state.animating;
+    if (state.animating) {
+      animBtn.classList.add('active');
+      animBtn.textContent = '■ Stop';
+      startOrbitAnim();
+    } else {
+      animBtn.classList.remove('active');
+      animBtn.textContent = '▶ Animate';
+    }
+  });
+
+  cycleBtn.addEventListener('click', () => {
+    state.cycling = !state.cycling;
+    cycleBtn.classList.toggle('active', state.cycling);
+  });
+
+  diveBtn.addEventListener('click', () => {
+    if (state.diving) {
+      state.diving = false;
+      diveBtn.classList.remove('active');
+      diveBtn.textContent = 'Dive';
+      crosshair.classList.remove('visible');
+    } else {
+      const target = divePoints[Math.floor(Math.random() * divePoints.length)];
+      state.diveTarget = target;
+      state.diving = true;
+      diveBtn.classList.add('active');
+      diveBtn.textContent = '■ Stop dive';
+      crosshair.classList.add('visible');
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    stopAllAnimations();
+    state.cx = -0.5; state.cy = 0;
+    state.scale = 1.4;
+    state.maxIter = 400;
+    state.shift = 0;
+    state.contrast = 0.3;
+    iterSlider.value = 400; iterVal.textContent = 400;
+    shiftSlider.value = 0; shiftVal.textContent = '0.00';
+    contrastSlider.value = 30; contrastVal.textContent = '0.30';
+    invalidateReference();
+    state.needsRender = true;
+  });
+
+  function stopAllAnimations() {
+    if (state.animating) {
+      state.animating = false;
+      animBtn.classList.remove('active');
+      animBtn.textContent = '▶ Animate';
+    }
+    if (state.diving) {
+      state.diving = false;
+      diveBtn.classList.remove('active');
+      diveBtn.textContent = 'Dive';
+      crosshair.classList.remove('visible');
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  //  Panel hide/show — button, pill, and keyboard shortcut (H)
+  // ────────────────────────────────────────────────────────────────
+  const panelEl = document.getElementById('panel');
+  const panelToggle = document.getElementById('panelToggle');
+  const showPill = document.getElementById('showPill');
+  let panelHidden = false;
+
+  function setPanelHidden(hidden) {
+    panelHidden = hidden;
+    panelEl.classList.toggle('hidden', hidden);
+    showPill.classList.toggle('visible', hidden);
+  }
+  panelToggle.addEventListener('click', () => setPanelHidden(true));
+  showPill.addEventListener('click', () => setPanelHidden(false));
+
+  // ────────────────────────────────────────────────────────────────
+  //  URL hash state sync — so views can be bookmarked and shared
+  // ────────────────────────────────────────────────────────────────
+  function syncControlsToState() {
+    iterSlider.value = state.maxIter;
+    iterVal.textContent = state.maxIter;
+    shiftSlider.value = Math.round(state.shift * 100);
+    shiftVal.textContent = state.shift.toFixed(2);
+    contrastSlider.value = Math.round(state.contrast * 100);
+    contrastVal.textContent = state.contrast.toFixed(2);
+    document.querySelectorAll('.palette-btn').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.p) === state.palette);
+    });
+  }
+
+  function encodeState() {
+    const p = new URLSearchParams();
+    // Number.toString() on a JS double preserves full precision — exactly what we want
+    p.set('cx', state.cx);
+    p.set('cy', state.cy);
+    p.set('z', state.scale);
+    if (state.palette !== 0) p.set('p', state.palette);
+    if (state.maxIter !== 400) p.set('i', state.maxIter);
+    if (state.shift !== 0) p.set('s', state.shift.toFixed(3));
+    if (Math.abs(state.contrast - 0.3) > 1e-6) p.set('c', state.contrast.toFixed(3));
+    return p.toString();
+  }
+
+  function decodeStateFromUrl() {
+    if (!location.hash || location.hash.length <= 1) return false;
+    try {
+      const p = new URLSearchParams(location.hash.slice(1));
+      let dirty = false;
+      if (p.has('cx')) { state.cx = parseFloat(p.get('cx')); dirty = true; }
+      if (p.has('cy')) { state.cy = parseFloat(p.get('cy')); dirty = true; }
+      if (p.has('z'))  { state.scale = parseFloat(p.get('z')); dirty = true; }
+      if (p.has('p'))  { state.palette = parseInt(p.get('p')); dirty = true; }
+      if (p.has('i'))  { state.maxIter = parseInt(p.get('i')); dirty = true; }
+      if (p.has('s'))  { state.shift = parseFloat(p.get('s')); dirty = true; }
+      if (p.has('c'))  { state.contrast = parseFloat(p.get('c')); dirty = true; }
+      if (dirty) {
+        syncControlsToState();
+        invalidateReference();
+        state.needsRender = true;
+      }
+      return dirty;
+    } catch (e) { return false; }
+  }
+
+  let urlUpdateTimer = 0;
+  function scheduleUrlUpdate() {
+    clearTimeout(urlUpdateTimer);
+    urlUpdateTimer = setTimeout(() => {
+      try { history.replaceState(null, '', '#' + encodeState()); } catch (e) {}
+    }, 500);
+  }
+  // URL updates are triggered from the render loop (see frame() → dirty branch).
+  // The debounce means the URL reflects the "settled" state, not every frame.
+
+  // ────────────────────────────────────────────────────────────────
+  //  Screenshot — download current view as PNG
+  // ────────────────────────────────────────────────────────────────
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.addEventListener('click', () => {
+    // Force a fresh render at current (full) resolution before capture
+    const wasInteracting = state.interacting;
+    state.interacting = false;
+    resize();
+    setProgramAndDraw();
+
+    canvas.toBlob(blob => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const zoom = 1.4 / state.scale;
+      const zstr = zoom < 1e4 ? zoom.toFixed(1) + 'x' : zoom.toExponential(1).replace('+','') + 'x';
+      a.download = `mandelbrot_${state.cx.toFixed(6)}_${state.cy.toFixed(6)}_${zstr}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
+
+    state.interacting = wasInteracting;
+
+    // Brief feedback
+    const orig = saveBtn.textContent;
+    saveBtn.textContent = '✓ Saved';
+    saveBtn.classList.add('active');
+    setTimeout(() => { saveBtn.textContent = orig; saveBtn.classList.remove('active'); }, 1400);
+  });
+
+  // ────────────────────────────────────────────────────────────────
+  //  Copy shareable link
+  // ────────────────────────────────────────────────────────────────
+  const copyLinkBtn = document.getElementById('copyLinkBtn');
+  copyLinkBtn.addEventListener('click', async () => {
+    // Flush pending URL update so clipboard has current state
+    clearTimeout(urlUpdateTimer);
+    try { history.replaceState(null, '', '#' + encodeState()); } catch (e) {}
+
+    const orig = copyLinkBtn.textContent;
+    try {
+      await navigator.clipboard.writeText(location.href);
+      copyLinkBtn.textContent = '✓ Copied';
+      copyLinkBtn.classList.add('active');
+    } catch (e) {
+      // Clipboard API can fail on non-https or in some iframes — fall back to prompt
+      window.prompt('Copy this link:', location.href);
+      copyLinkBtn.textContent = '↗ URL shown';
+    }
+    setTimeout(() => {
+      copyLinkBtn.textContent = orig;
+      copyLinkBtn.classList.remove('active');
+    }, 1600);
+  });
+
+  // ────────────────────────────────────────────────────────────────
+  //  Unified keyboard handler — navigation + shortcuts
+  //  Arrow keys / WASD : pan       |   + / -   : zoom
+  //  1 – 5             : palette   |   space   : animate toggle
+  //  H                 : hide/show panel
+  // ────────────────────────────────────────────────────────────────
+  window.addEventListener('keydown', e => {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+
+    const panStep = state.scale * 0.12;
+    const zoomFactor = 1.12;
+
+    switch (e.key) {
+      case 'h': case 'H':
+        if (e.repeat) return;
+        e.preventDefault();
+        setPanelHidden(!panelHidden);
+        return;
+
+      case 'ArrowLeft': case 'a': case 'A':
+        state.cx -= panStep; state.needsRender = true; markInteracting(); break;
+      case 'ArrowRight': case 'd': case 'D':
+        state.cx += panStep; state.needsRender = true; markInteracting(); break;
+      case 'ArrowUp': case 'w': case 'W':
+        state.cy += panStep; state.needsRender = true; markInteracting(); break;
+      case 'ArrowDown': case 's': case 'S':
+        state.cy -= panStep; state.needsRender = true; markInteracting(); break;
+
+      case '+': case '=':
+        state.scale = Math.max(state.scale / zoomFactor, DD_FLOOR);
+        state.needsRender = true; markInteracting(); break;
+      case '-': case '_':
+        state.scale *= zoomFactor;
+        state.needsRender = true; markInteracting(); break;
+
+      case ' ':
+        if (e.repeat) return;
+        e.preventDefault();
+        animBtn.click();
+        return;
+
+      case '1': case '2': case '3': case '4': case '5': {
+        if (e.repeat) return;
+        const btn = document.querySelector('.palette-btn[data-p="' + (parseInt(e.key) - 1) + '"]');
+        if (btn) btn.click();
+        return;
+      }
+      default: return;
+    }
+  });
+
+  // Try to restore state from URL before first render
+  decodeStateFromUrl();
+
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
